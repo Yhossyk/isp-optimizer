@@ -1,0 +1,348 @@
+<!doctype html>
+<html lang="es">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<title>ISP OPTIMIZER · Gradientes Conjugados Precondicionado</title>
+<link rel="icon" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24'%3E%3Crect width='24' height='24' rx='6' fill='%232f6bff'/%3E%3C/svg%3E">
+<link rel="stylesheet" href="{{ url_for('static', filename='css/style.css') }}">
+</head>
+<body>
+<svg width="0" height="0" style="position:absolute" aria-hidden="true">
+  <symbol id="i-home" viewBox="0 0 24 24"><path d="M3 11l9-8 9 8"/><path d="M5 10v10h14V10"/></symbol>
+  <symbol id="i-book" viewBox="0 0 24 24"><path d="M4 5a2 2 0 012-2h13v16H6a2 2 0 00-2 2z"/><path d="M4 21V5"/></symbol>
+  <symbol id="i-sigma" viewBox="0 0 24 24"><path d="M18 5H6l7 7-7 7h12"/></symbol>
+  <symbol id="i-edit" viewBox="0 0 24 24"><path d="M4 20h4L19 9l-4-4L4 16z"/><path d="M13 7l4 4"/></symbol>
+  <symbol id="i-layers" viewBox="0 0 24 24"><path d="M12 3l9 5-9 5-9-5z"/><path d="M3 13l9 5 9-5"/></symbol>
+  <symbol id="i-grid" viewBox="0 0 24 24"><rect x="3" y="3" width="7" height="7" rx="1"/><rect x="14" y="3" width="7" height="7" rx="1"/><rect x="3" y="14" width="7" height="7" rx="1"/><rect x="14" y="14" width="7" height="7" rx="1"/></symbol>
+  <symbol id="i-bolt" viewBox="0 0 24 24"><path d="M13 2L4 14h7l-1 8 9-12h-7z"/></symbol>
+  <symbol id="i-chart" viewBox="0 0 24 24"><path d="M3 3v18h18"/><path d="M7 15l4-5 3 3 5-7"/></symbol>
+  <symbol id="i-flask" viewBox="0 0 24 24"><path d="M9 3h6"/><path d="M10 3v6L4 20h16l-6-11V3"/></symbol>
+  <symbol id="i-flag" viewBox="0 0 24 24"><path d="M5 21V4"/><path d="M5 4h12l-2 4 2 4H5"/></symbol>
+  <symbol id="i-fiber" viewBox="0 0 24 24"><path d="M3 17c4 0 4-10 9-10s5 10 9 10"/><circle cx="3" cy="17" r="1.5"/><circle cx="21" cy="17" r="1.5"/></symbol>
+  <symbol id="i-router" viewBox="0 0 24 24"><rect x="3" y="13" width="18" height="7" rx="2"/><path d="M7 16.5h.01M11 16.5h.01"/><path d="M8 10a5.5 5.5 0 018 0"/><path d="M5.5 7.5a9 9 0 0113 0"/></symbol>
+  <symbol id="i-server" viewBox="0 0 24 24"><rect x="3" y="3" width="18" height="7" rx="2"/><rect x="3" y="14" width="18" height="7" rx="2"/><path d="M7 6.5h.01M7 17.5h.01"/></symbol>
+  <symbol id="i-wrench" viewBox="0 0 24 24"><path d="M14.7 6.3a4 4 0 01-5 5L4 17l3 3 5.7-5.7a4 4 0 005-5l-2.5 2.5-2.5-.5-.5-2.5z"/></symbol>
+  <symbol id="i-db" viewBox="0 0 24 24"><ellipse cx="12" cy="5" rx="8" ry="3"/><path d="M4 5v6c0 1.7 3.6 3 8 3s8-1.3 8-3V5"/><path d="M4 11v6c0 1.7 3.6 3 8 3s8-1.3 8-3v-6"/></symbol>
+  <symbol id="i-menu" viewBox="0 0 24 24"><path d="M4 6h16M4 12h16M4 18h16"/></symbol>
+</svg>
+
+<aside class="sidebar" id="sidebar">
+  <div class="brand">
+    <div class="logo"><svg class="icon" style="width:22px;height:22px"><use href="#i-fiber"/></svg></div>
+    <div>ISP OPTIMIZER<small>Gradientes Conjugados Precond.</small></div>
+  </div>
+  <nav class="nav" id="nav">
+    <a href="#m1"><b>1</b><svg class="icon"><use href="#i-home"/></svg>Inicio</a>
+    <a href="#m2"><b>2</b><svg class="icon"><use href="#i-book"/></svg>Caso de estudio</a>
+    <a href="#m3"><b>3</b><svg class="icon"><use href="#i-sigma"/></svg>Modelo matemático</a>
+    <a href="#m4"><b>4</b><svg class="icon"><use href="#i-edit"/></svg>Editor de datos</a>
+    <a href="#m5"><b>5</b><svg class="icon"><use href="#i-layers"/></svg>Tres escenarios</a>
+    <a href="#m6"><b>6</b><svg class="icon"><use href="#i-grid"/></svg>Solución directa</a>
+    <a href="#m7"><b>7</b><svg class="icon"><use href="#i-bolt"/></svg>GC vs GCP</a>
+    <a href="#m8"><b>8</b><svg class="icon"><use href="#i-chart"/></svg>Errores y condición</a>
+    <a href="#m9"><b>9</b><svg class="icon"><use href="#i-flask"/></svg>Pruebas QA</a>
+    <a href="#m10"><b>10</b><svg class="icon"><use href="#i-flag"/></svg>Conclusiones</a>
+  </nav>
+</aside>
+
+<div class="main" id="mainwrap">
+  <div class="topbar" id="topbar">
+    <button class="btn sm menu-btn" id="menuBtn" aria-label="Menú"><svg class="icon"><use href="#i-menu"/></svg></button>
+    <span class="tag info" id="modeTag">Cargando…</span>
+    <span class="tag" id="sigTag" title="Huella de la versión concreta de A, b y parámetros usada en los resultados">firma: —</span>
+    <span class="spacer"></span>
+    <span class="banner stale-b" id="staleBanner">⟳ Resultados desactualizados · recalculando…</span>
+    <span class="banner ok-b" id="okBanner">✔ Resultados al día</span>
+    <span class="banner bad-b" id="badBanner">✖ Datos no válidos · no se ejecutó GC/GCP</span>
+  </div>
+
+<!-- =========================== MÓDULO 1 =========================== -->
+<section class="module" id="m1">
+  <div class="hero reveal">
+    <div class="eyebrow">Métodos Numéricos · UMSA</div>
+    <h1>ISP OPTIMIZER</h1>
+    <p class="title">Modelo de optimización financiera para la expansión de infraestructura de red de un proveedor de Internet (ISP)</p>
+    <div class="meta">
+      <div><span>Estudiante</span>{{ student }}</div>
+      <div><span>Docente</span>{{ teacher }}</div>
+      <div><span>Universidad</span>Universidad Mayor de San Andrés (UMSA)</div>
+      <div><span>Mension</span>Ingeniería de Sistemas</div>
+      <div><span>Materia</span>Métodos Numéricos</div>
+      <div><span>Área de aplicación</span>Infraestructura de redes, telecomunicaciones y análisis financiero</div>
+    </div>
+    <p class="lead"><b>Descripción.</b> Aplicación web que formula las necesidades de inversión de la empresa ficticia <i>Conecta Bolivia</i> como un sistema lineal <code>A·x = b</code> (A simétrica y definida positiva) y lo resuelve con el Método de Gradientes Conjugados (GC) y con Gradientes Conjugados Precondicionado con Jacobi (GCP), contrastando ambos con una solución directa por Cholesky.</p>
+    <p class="lead"><b>Objetivo general.</b> Analizar un modelo financiero de expansión de infraestructura de un ISP mediante sistemas de ecuaciones lineales, comparando la convergencia, los errores, los residuos y el comportamiento numérico de GC y GCP bajo tres escenarios.</p>
+    <div class="btn-row"><a class="btn primary" href="#m4"><svg class="icon"><use href="#i-bolt"/></svg>Comenzar el análisis</a><a class="btn" href="#m2">Ver caso de estudio</a></div>
+  </div>
+  <div class="grid g5">
+    <div class="card kpi"><div class="v">4</div><div class="l">Variables de inversión</div></div>
+    <div class="card kpi"><div class="v">3</div><div class="l">Escenarios</div></div>
+    <div class="card kpi"><div class="v">GC · GCP</div><div class="l">Métodos implementados</div></div>
+    <div class="card kpi"><div class="v">Jacobi</div><div class="l">Precondicionador</div></div>
+    <div class="card kpi"><div class="v">10⁻⁶</div><div class="l">Tolerancia predeterminada</div></div>
+  </div>
+  <div class="note info" style="margin-top:16px">Estos indicadores describen la configuración del proyecto, no resultados. Los resultados numéricos aparecen solo cuando se ejecuta un cálculo (se hace automáticamente al abrir un escenario y cada vez que se edita un dato).</div>
+</section>
+
+<!-- =========================== MÓDULO 2 =========================== -->
+<section class="module" id="m2">
+  <div class="mod-head"><span class="mod-num">MÓDULO 2</span><h2>Caso de estudio · Conecta Bolivia</h2></div>
+  <p class="lead">Datos y empresa son <b>supuestos académicos</b> creados para simulación; no son cotizaciones ni estadísticas reales.</p>
+
+  <h3>2.1 Contexto empresarial</h3>
+  <div class="grid g3">
+    <div class="card"><h4>¿Qué es?</h4><p><b>Conecta Bolivia</b> es un proveedor de servicios de Internet (ISP) ficticio, con servicio residencial y corporativo por fibra óptica y enlaces inalámbricos.</p></div>
+    <div class="card"><h4>¿Por qué crece?</h4><p>Más clientes y mayor demanda de ancho de banda obligan a ampliar la cobertura y renovar equipos de red.</p></div>
+    <div class="card"><h4>Necesidades tecnológicas</h4><p>Tender fibra, instalar routers y switches, ampliar servidores y equipos de distribución, y sostener el mantenimiento y soporte técnico.</p></div>
+  </div>
+
+  <h3>2.2 Situación problemática</h3>
+  <div class="flow">
+    <div class="step"><b>01</b>Crecimiento de la demanda de Internet</div>
+    <div class="step"><b>02</b>Limitaciones de cobertura</div>
+    <div class="step"><b>03</b>Necesidad de adquirir equipos</div>
+    <div class="step"><b>04</b>Incremento de costos</div>
+    <div class="step"><b>05</b>Necesidad de mantenimiento</div>
+    <div class="step bad"><b>06</b>Recursos financieros limitados</div>
+  </div>
+
+  <div class="grid g2">
+    <div>
+      <h3>2.3 Planteamiento del problema</h3>
+      <div class="card"><p><i>¿Cómo puede Conecta Bolivia analizar sus necesidades de inversión en infraestructura de red, considerando las relaciones entre los diferentes componentes tecnológicos y los recursos financieros requeridos?</i></p></div>
+      <h3>2.4 Justificación</h3>
+      <div class="card"><p>Las áreas de inversión no son independientes: ampliar la fibra exige equipos y soporte. Un modelo matemático permite cuantificar esas interdependencias, estudiar cómo cambian las cantidades si cambian los costos o requerimientos y repetir el análisis de forma rápida y reproducible.</p></div>
+    </div>
+    <div>
+      <h3>2.5 Objetivo del modelo</h3>
+      <div class="card"><p>Aplicar GC y GCP para resolver un sistema lineal que represente las necesidades de inversión y analizar el comportamiento de los métodos (iteraciones, residuos, errores y condicionamiento) bajo tres escenarios.</p></div>
+      <h3>2.7 Importancia del análisis financiero</h3>
+      <div class="card"><p>Si suben los costos (A) o los requerimientos (b), cambian las cantidades estimadas de inversión x = A⁻¹b. Cuantificar ese cambio permite prever reservas de contingencia y priorizar áreas. Además, la sensibilidad depende del condicionamiento κ(A).</p></div>
+    </div>
+  </div>
+
+  <h3>2.6 Áreas de inversión</h3>
+  <div class="grid g4">
+    <div class="card"><div class="iconbox"><svg class="icon"><use href="#i-fiber"/></svg></div><h4>X₁ · Fibra óptica</h4><p>Tendido de fibra y ampliación de la cobertura hacia nuevos barrios y clientes.</p></div>
+    <div class="card"><div class="iconbox"><svg class="icon"><use href="#i-router"/></svg></div><h4>X₂ · Routers y switches</h4><p>Equipos de conmutación y enrutamiento que reparten el tráfico en la red.</p></div>
+    <div class="card"><div class="iconbox"><svg class="icon"><use href="#i-server"/></svg></div><h4>X₃ · Servidores</h4><p>Servidores y equipos de distribución para servicios, caché y gestión de clientes.</p></div>
+    <div class="card"><div class="iconbox"><svg class="icon"><use href="#i-wrench"/></svg></div><h4>X₄ · Mantenimiento</h4><p>Soporte técnico, repuestos y mantenimiento preventivo y correctivo.</p></div>
+  </div>
+
+  <h3>2.8 Escenarios de análisis</h3>
+  <div class="grid g3">
+    <div class="card"><span class="tag info">1 · Ideal</span><p>Condiciones normales: costos controlados, matriz bien condicionada.</p></div>
+    <div class="card"><span class="tag warn">2 · Estrés financiero</span><p>Costos y requerimientos más altos (A₂ = 1.15·A₁ y nuevo b). Desplaza el equilibrio.</p></div>
+    <div class="card"><span class="tag" style="color:#c4b5fd">3 · Mal condicionado</span><p>Escalas muy distintas y fuerte acoplamiento: κ(A) ≈ 10⁶. Sirve para estudiar dificultades numéricas.</p></div>
+  </div>
+
+  <h3>2.9 Justificación matemática</h3>
+  <div class="card">
+    <p>Se modela cada necesidad como una ecuación lineal que combina la inversión propia y la de las áreas relacionadas, lo que da <code>A·x = b</code>. Si A es simétrica (dependencia recíproca) y definida positiva (<code>xᵀAx &gt; 0</code>), resolver el sistema equivale a minimizar la forma cuadrática <code>½xᵀAx − bᵀx</code>, y el método de Gradientes Conjugados converge garantizadamente. El precondicionador (aquí Jacobi, <code>M = diag(A)</code>) busca un sistema equivalente con menor número de condición.</p>
+    <div class="flow">
+      <div class="step"><b>Datos A, b</b>Supuestos académicos</div>
+      <div class="step"><b>Validar</b>Simetría y SPD</div>
+      <div class="step"><b>Cholesky</b>Referencia directa</div>
+      <div class="step"><b>GC / GCP</b>Iteraciones</div>
+      <div class="step"><b>Errores</b>Ea, Er, Ep, κ</div>
+      <div class="step"><b>Conclusiones</b>Dinámicas</div>
+    </div>
+  </div>
+
+  <h3>2.10 Datos utilizados</h3>
+  <div class="note">Todas las cantidades son <b>miles de bolivianos (Bs)</b> y todos los coeficientes son supuestos académicos. No son cotizaciones, presupuestos ni estadísticas reales de ninguna empresa.</div>
+</section>
+
+<!-- =========================== MÓDULO 3 =========================== -->
+<section class="module" id="m3">
+  <div class="mod-head"><span class="mod-num">MÓDULO 3</span><h2>Formulación del modelo matemático</h2></div>
+  <div class="grid g2">
+    <div>
+      <h3>3.1 Variables</h3>
+      <div class="tbl-wrap noscroll"><table><thead><tr><th>Variable</th><th>Descripción</th><th>Unidad</th></tr></thead><tbody>
+        <tr><td>X₁</td><td class="txt">Inversión en fibra óptica</td><td>Miles de Bs</td></tr>
+        <tr><td>X₂</td><td class="txt">Inversión en routers y switches</td><td>Miles de Bs</td></tr>
+        <tr><td>X₃</td><td class="txt">Inversión en servidores</td><td>Miles de Bs</td></tr>
+        <tr><td>X₄</td><td class="txt">Inversión en mantenimiento</td><td>Miles de Bs</td></tr>
+      </tbody></table></div>
+    </div>
+    <div>
+      <h3>3.2 Sistema de ecuaciones</h3>
+      <div class="card"><p><code>A·x = b</code>, con A ∈ ℝ⁴ˣ⁴ (coeficientes de costo y acoplamiento), x ∈ ℝ⁴ (inversiones a estimar) y b ∈ ℝ⁴ (requerimientos, en miles de Bs). La fila i dice: «la combinación ponderada de inversiones debe cubrir el requerimiento bᵢ».</p></div>
+    </div>
+  </div>
+
+  <h3>3.5 Representación del sistema activo</h3>
+  <div class="card stale-able"><div class="eq" id="sysVisual"></div><p id="sysExplain" class="lead"></p></div>
+
+  <h3>3.3 Interpretación de la matriz</h3>
+  <div class="grid g2">
+    <div class="card"><h4>Diagonal principal aᵢᵢ</h4><p>Peso con que la inversión de un área contribuye a su propia ecuación (costo propio de la inversión i). Se construyen mayores que los términos cruzados para reflejar que cada área depende principalmente de sí misma.</p></div>
+    <div class="card"><h4>Fuera de la diagonal aᵢⱼ</h4><p>Acoplamiento entre áreas i y j: cuánto de la inversión j también presiona la necesidad i. Se usan valores mayores entre áreas contiguas (fibra↔routers↔servidores↔mantenimiento) y casi nulos entre áreas remotas. Es simétrica porque se supone la dependencia recíproca.</p></div>
+  </div>
+  <div class="note info">La justificación específica de los coeficientes de cada escenario se muestra en el Módulo 5. Son valores académicos, no estimados de datos reales.</div>
+
+  <h3>3.4 Propiedades necesarias · comprobación por escenario</h3>
+  <p class="lead">Matriz cuadrada, simetría <code>A = Aᵀ</code> y definición positiva <code>xᵀAx &gt; 0</code>, demostrada con valores propios (todos &gt; 0) y el criterio de Sylvester (todos los menores principales &gt; 0). Los números se calculan en el servidor.</p>
+  <div class="tbl-wrap noscroll"><table id="propsTable"><thead><tr><th>Escenario</th><th>Cuadrada</th><th>Simétrica</th><th>Valores propios</th><th>Menores principales Δ₁…Δ₄</th><th>Cholesky</th><th>¿SPD?</th></tr></thead><tbody></tbody></table></div>
+  <h4 style="margin-top:16px">Matriz activa (editor)</h4>
+  <div class="tbl-wrap noscroll stale-able"><table id="propsActive"><thead><tr><th>Cuadrada</th><th>Simétrica</th><th>Valores propios</th><th>Menores principales</th><th>¿SPD?</th></tr></thead><tbody></tbody></table></div>
+</section>
+
+<!-- =========================== MÓDULO 4 =========================== -->
+<section class="module" id="m4">
+  <div class="mod-head"><span class="mod-num">MÓDULO 4</span><h2>Editor de datos y configuración</h2></div>
+  <p class="lead">Fuente única de datos activos: lo que ve aquí es exactamente lo que se calcula. Cada cambio marca los resultados como desactualizados y recalcula automáticamente.</p>
+
+  <div class="card">
+    <div class="status">
+      <span class="tag info" id="edModeTag">—</span>
+      <div class="btn-row" style="margin:0">
+        <button class="btn sm" id="btnModeScn">Modo escenarios</button>
+        <button class="btn sm" id="btnModeMan">Modo manual</button>
+      </div>
+    </div>
+    <div class="sel-scn" id="scnPicker"></div>
+    <div class="grid g2" style="margin-top:12px">
+      <div>
+        <h4>Matriz A (4×4)</h4>
+        <div class="mgrid" id="gridA" style="grid-template-columns:repeat(4,1fr)"></div>
+        <label class="chk" style="margin-top:8px"><input type="checkbox" id="mirror" checked> Mantener simetría al editar (espejar aᵢⱼ ↔ aⱼᵢ)</label>
+      </div>
+      <div>
+        <h4>Vector b (requerimientos)</h4><div class="vgrid" id="gridB"></div>
+        <h4 style="margin-top:12px">Vector inicial x₀</h4><div class="vgrid" id="gridX0"></div>
+        <div class="params">
+          <label class="f">Tolerancia<input id="inTol" value="1e-6"></label>
+          <label class="f">Máx. iteraciones<input id="inMax" type="number" min="1" max="10000" step="1" value="1000"></label>
+          <label class="f">Precondicionador<select id="inPre"><option value="jacobi">Jacobi (M = diag A)</option><option value="none">Ninguno (M = I)</option></select></label>
+        </div>
+      </div>
+    </div>
+    <div class="btn-row">
+      <button class="btn" id="btnRestore">↺ Restaurar escenario original</button>
+      <button class="btn" id="btnZeroX0">x₀ = 0</button>
+      <button class="btn primary" id="btnRunSave"><svg class="icon"><use href="#i-db"/></svg>Ejecutar y guardar en historial</button>
+      <button class="btn" id="btnSaveScn">Guardar como escenario propio</button>
+    </div>
+    <div class="errbox" id="edErrors"></div>
+  </div>
+
+  <div class="grid g2" style="margin-top:16px">
+    <div class="card"><h4>Escenarios propios guardados (SQLite)</h4><div id="savedList" class="lead">—</div></div>
+    <div class="card"><div class="status"><h4 style="margin:0">Historial de simulaciones (SQLite)</h4><span class="spacer"></span><button class="btn sm danger" id="btnClearHist">Vaciar</button></div>
+      <div class="tbl-wrap" style="margin-top:8px"><table id="histTable"><thead><tr><th>#</th><th>Fecha</th><th>Datos</th><th>GC/GCP</th><th>κ(A)</th><th></th></tr></thead><tbody></tbody></table></div>
+      <p class="lead" style="font-size:.8rem">El historial solo registra ejecuciones. Al «Cargar» se vuelven a calcular los resultados; no se reutilizan los guardados.</p>
+    </div>
+  </div>
+</section>
+
+<!-- =========================== MÓDULO 5 =========================== -->
+<section class="module" id="m5">
+  <div class="mod-head"><span class="mod-num">MÓDULO 5</span><h2>Simulación de los tres escenarios</h2></div>
+  <p class="lead">Las tres simulaciones representan a la misma empresa y las mismas cuatro áreas. Cada tarjeta muestra los datos y resultados de <b>su propia</b> matriz original (ejecutada con los parámetros actuales del editor).</p>
+  <div class="grid g3" id="scnCards"></div>
+  <div class="note">Auditoría matemática: los tres sistemas fueron verificados (A simétrica, definida positiva, <code>A·x_esperado = b</code> con error ≤ 1.4·10⁻¹⁴). No fue necesario modificar ningún dato. Escenario 2 usa un escalamiento global (1.15·A₁): es una simplificación académica, no una inflación diferenciada por componente, y por eso κ(A₂) = κ(A₁).</div>
+</section>
+
+<!-- =========================== MÓDULO 6 =========================== -->
+<section class="module" id="m6">
+  <div class="mod-head"><span class="mod-num">MÓDULO 6</span><h2>Solución directa de referencia · Cholesky</h2></div>
+  <div class="grid g2">
+    <div class="card"><h4>¿Qué es y por qué?</h4><p>Para A simétrica definida positiva existe una única L triangular inferior con diagonal positiva tal que <code>A = L·Lᵀ</code>. Es un método directo, estable y de bajo costo; se usa como <b>solución numérica de referencia</b> para medir los errores de GC y GCP.</p></div>
+    <div class="card"><h4>Cómo se obtiene y se comprueba</h4><ol class="clean"><li>Factorizar A = L·Lᵀ.</li><li>Sustitución hacia adelante: <code>L·y = b</code>.</li><li>Sustitución hacia atrás: <code>Lᵀ·x = y</code>.</li><li>Comprobar el residuo ‖b − A·x‖/‖b‖ y que L·Lᵀ reproduce A.</li></ol></div>
+  </div>
+  <div class="stale-able">
+    <h3>Matrices (sistema activo)</h3>
+    <div class="eq" id="cholMats"></div>
+    <div class="grid g2">
+      <div><h4>Sustitución hacia adelante</h4><pre class="steps" id="fwdSteps"></pre></div>
+      <div><h4>Sustitución hacia atrás</h4><pre class="steps" id="bwdSteps"></pre></div>
+    </div>
+    <div class="grid g3" id="cholSummary"></div>
+  </div>
+</section>
+
+<!-- =========================== MÓDULO 7 =========================== -->
+<section class="module" id="m7">
+  <div class="mod-head"><span class="mod-num">MÓDULO 7</span><h2>Gradientes Conjugados (GC) y Precondicionado (GCP)</h2></div>
+  <div class="grid g2">
+    <div class="card"><h4>GC clásico (M = I)</h4><pre class="steps">r₀ = b − A·x₀ ; p₀ = r₀
+para k = 0,1,…:
+  αₖ = (rₖᵀrₖ)/(pₖᵀA·pₖ)
+  xₖ₊₁ = xₖ + αₖ·pₖ
+  rₖ₊₁ = rₖ − αₖ·A·pₖ
+  βₖ = (rₖ₊₁ᵀrₖ₊₁)/(rₖᵀrₖ)
+  pₖ₊₁ = rₖ₊₁ + βₖ·pₖ</pre></div>
+    <div class="card"><h4>GCP con Jacobi (M = diag A)</h4><pre class="steps">r₀ = b − A·x₀ ; resolver M·z₀ = r₀ ; p₀ = z₀
+para k = 0,1,…:
+  αₖ = (rₖᵀzₖ)/(pₖᵀA·pₖ)
+  xₖ₊₁ = xₖ + αₖ·pₖ ; rₖ₊₁ = rₖ − αₖ·A·pₖ
+  resolver M·zₖ₊₁ = rₖ₊₁   (zᵢ = rᵢ/aᵢᵢ)
+  βₖ = (rₖ₊₁ᵀzₖ₊₁)/(rₖᵀzₖ)
+  pₖ₊₁ = zₖ₊₁ + βₖ·pₖ</pre></div>
+  </div>
+  <div class="note info">Criterio de parada: <code>‖b − A·xₖ‖₂ / ‖b‖₂ &lt; tolerancia</code>, usando el residuo <b>real</b> recalculado en cada iteración y al finalizar. No hay divisiones por cero ni se aceptan valores no finitos como convergencia.</div>
+  <div class="stale-able">
+    <div class="grid g4" id="methodCards"></div>
+    <h3>Evolución de los residuos</h3>
+    <div class="card"><div class="chart tall"><canvas id="chResid"></canvas></div></div>
+    <div class="grid g2">
+      <div><h3>GC · iteraciones</h3><div class="tbl-wrap"><table id="tblGC"></table></div></div>
+      <div><h3>GCP · iteraciones</h3><div class="tbl-wrap"><table id="tblGCP"></table></div></div>
+    </div>
+  </div>
+</section>
+
+<!-- =========================== MÓDULO 8 =========================== -->
+<section class="module" id="m8">
+  <div class="mod-head"><span class="mod-num">MÓDULO 8</span><h2>Errores y condicionamiento</h2></div>
+  <p class="lead">Ea = |x_calc − x_ref| · Er = Ea/|x_ref| · Ep = Er×100 % · κ₂(A) = ‖A‖₂‖A⁻¹‖₂ · κ precondicionado = κ₂(M^(−1/2)·A·M^(−1/2)). Referencia: solución directa (Cholesky).</p>
+  <div class="stale-able">
+    <div class="grid g5" id="metricCards"></div>
+    <h3>Solución y errores por variable (sistema activo)</h3>
+    <div class="tbl-wrap noscroll"><table id="tblErr"></table></div>
+    <div id="expectedBox"></div>
+    <div class="grid g2" style="margin-top:16px">
+      <div class="card"><h4>Convergencia: residuo relativo por iteración</h4><div class="chart"><canvas id="chConv"></canvas></div></div>
+      <div class="card"><h4>Errores absolutos por variable</h4><div class="chart"><canvas id="chErr"></canvas></div></div>
+      <div class="card"><h4>Cantidades estimadas de inversión (activo)</h4><div class="chart"><canvas id="chInv"></canvas></div></div>
+      <div class="card"><h4>Número de condición por escenario</h4><div class="chart"><canvas id="chCond"></canvas></div></div>
+    </div>
+  </div>
+  <h3>Tabla comparativa de los tres escenarios</h3>
+  <p class="lead">Datos originales de cada escenario con los parámetros actuales del editor; no mezcla resultados de matrices distintas.</p>
+  <div class="tbl-wrap noscroll"><table id="tblCompare"></table></div>
+</section>
+
+<!-- =========================== MÓDULO 9 =========================== -->
+<section class="module" id="m9">
+  <div class="mod-head"><span class="mod-num">MÓDULO 9</span><h2>Pruebas de calidad (QA)</h2></div>
+  <p class="lead">Cada prueba ejecuta código real y compara con un resultado esperado. Nada se marca como aprobado sin haberse ejecutado.</p>
+  <div class="btn-row"><button class="btn primary" id="btnQA"><svg class="icon"><use href="#i-flask"/></svg>Ejecutar todas las pruebas</button><span id="qaSummary" class="tag">Sin ejecutar</span></div>
+  <div class="tbl-wrap noscroll"><table id="tblQA"><thead><tr><th>#</th><th>Prueba</th><th>Datos / Entrada</th><th>Resultado esperado</th><th>Resultado obtenido</th><th>Estado</th><th>Explicación</th></tr></thead><tbody><tr><td colspan="7" class="txt">Presione «Ejecutar todas las pruebas».</td></tr></tbody></table></div>
+</section>
+
+<!-- =========================== MÓDULO 10 =========================== -->
+<section class="module" id="m10">
+  <div class="mod-head"><span class="mod-num">MÓDULO 10</span><h2>Conclusiones, recomendaciones y bibliografía</h2></div>
+  <div class="note info">Todo este texto se genera automáticamente a partir de los resultados actuales (A, b, parámetros, errores, residuos, iteraciones y condicionamiento). Cambia al editar datos o al elegir otro escenario.</div>
+  <div class="status" style="margin:8px 0"><span class="tag" id="conclTag">—</span></div>
+  <div class="grid g2 concl stale-able" id="conclGrid"></div>
+  <h3>10.3 Recomendaciones</h3>
+  <div class="grid g2 concl stale-able" id="recGrid"></div>
+  <h3>10.4 Referencias bibliográficas</h3>
+  <div class="card"><ul class="clean refs">
+    <li>Suñagua, P. (2020). <i>Método de Gradientes Conjugados Precondicionado</i>. Revista Boliviana de Matemática–UMSA, 04, 2–7.</li>
+    <li>Golub, G. H., y Van Loan, C. F. (2013). <i>Matrix Computations</i> (4.ª ed.). Johns Hopkins University Press.</li>
+    <li>Saad, Y. (2003). <i>Iterative Methods for Sparse Linear Systems</i> (2.ª ed.). SIAM.</li>
+  </ul></div>
+  <footer>ISP OPTIMIZER · UMSA · Métodos Numéricos · Datos supuestos con fines académicos</footer>
+</section>
+</div>
+
+<script src="{{ url_for('static', filename='vendor/chart.umd.js') }}"></script>
+<script src="{{ url_for('static', filename='js/app.js') }}"></script>
+</body>
+</html>
